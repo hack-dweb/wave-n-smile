@@ -3,6 +3,7 @@ import {Ipfs} from '../../ipfs/services/ipfs';
 import {ActivatedRoute} from '@angular/router';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {Observable} from 'rxjs/Observable';
+import { debug } from 'util';
 
 @Component({
   selector: 'app-root',
@@ -57,7 +58,9 @@ export class MainComponent implements OnInit {
     const blob = new Blob(this.chunks, {'type': 'audio/ogg; codecs=opus'});
     this.chunks = [];
     const audioURL = window.URL.createObjectURL(blob);
-
+    this.ipfs.node.files.add(blob, (err, res) => {
+      this.ipfs.pub('hello', res[0].hash);
+    });
     const audio: HTMLAudioElement = <HTMLAudioElement>document.getElementById('a');
     audio.src = audioURL;
   }
@@ -72,8 +75,15 @@ export class MainComponent implements OnInit {
 
   ngOnInit() {
     this.ipfs.ready().subscribe(() => {
-      this.ipfs.sub('main').subscribe(data => {
+      this.ipfs.sub('hello').subscribe(data => {
         this.messages.push(data.toString());
+        this.ipfs.get(data.toString()).subscribe((files) => {
+          console.log(files);
+          const blob = new Blob([files[0].content], { 'type': 'audio/ogg; codecs=opus' });
+          const audioURL = window.URL.createObjectURL(blob);
+          const audio: HTMLAudioElement = <HTMLAudioElement>document.getElementById('a');
+          audio.src = audioURL;
+        });
       });
       this.ipfs.peers().subscribe(peer => {
         this.peers.push(peer.id._idB58String);
@@ -88,16 +98,6 @@ export class MainComponent implements OnInit {
           reader.readAsDataURL(blob);
         });
       }
-
-      this.ipfs.get('QmWyF4tixREyU257BYBCzSAcYhLzYxsMvqpeNwnbQ3xfGh').subscribe((files) => {
-        const blob = new Blob([files[0].content]);
-        // const url = window.URL.createObjectURL(blob);
-
-        blobToDataURL(blob).then((imgUrl: string) => {
-          const img: HTMLImageElement = <HTMLImageElement>document.getElementById('i');
-          img.src = imgUrl;
-        });
-      });
     });
   }
 
