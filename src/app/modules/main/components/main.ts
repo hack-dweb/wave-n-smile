@@ -16,6 +16,8 @@ export class MainComponent implements OnInit {
   messages: Array<string>;
   ipfs;
   displayPeerList = false;
+  mediaRecorder;
+  chunks: Array<any>;
 
   image: SafeUrl;
 
@@ -23,6 +25,45 @@ export class MainComponent implements OnInit {
     this.messages = [];
     this.peers = [];
     this.ipfs = ipfs;
+    this.initMediaRecorder();
+  }
+
+  initMediaRecorder() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      console.log('getUserMedia supported.');
+      navigator.mediaDevices.getUserMedia(
+        // constraints - only audio needed for this app
+        {
+          audio: true
+        })
+        .then((stream) => {
+          this.mediaRecorder = new (<any>window).MediaRecorder(stream);
+          this.mediaRecorder.onstop = this.onStop.bind(this);
+          this.mediaRecorder.ondataavailable = this.onAudioData.bind(this);
+        });
+    }
+  }
+
+  recordAudio() {
+    this.chunks = [];
+    this.mediaRecorder.start();
+  }
+
+  onAudioData(e) {
+    this.chunks.push(e.data);
+  }
+
+  onStop() {
+    const blob = new Blob(this.chunks, {'type': 'audio/ogg; codecs=opus'});
+    this.chunks = [];
+    const audioURL = window.URL.createObjectURL(blob);
+
+    const audio: HTMLAudioElement = <HTMLAudioElement>document.getElementById('a');
+    audio.src = audioURL;
+  }
+
+  stopRecording() {
+    this.mediaRecorder.stop();
   }
 
   addPeer(peer) {

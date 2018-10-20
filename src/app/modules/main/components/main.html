@@ -25,4 +25,9 @@ Messages:
     <li *ngFor="let m of messages">{{m}}</li>
 </ul>
 
+<button (click)="recordAudio()">Record</button>
+<button (click)="stopRecording()">Stop</button>
+
+<audio id="a" controls></audio>
 <img id="i">
+
