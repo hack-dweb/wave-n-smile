@@ -1,9 +1,10 @@
-import {Component, OnInit} from '@angular/core';
-import {Ipfs} from '../../ipfs/services/ipfs';
-import {ActivatedRoute} from '@angular/router';
-import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {Observable} from 'rxjs/Observable';
-import {Buffer} from 'buffer';
+import { Component, OnInit } from '@angular/core';
+import { Ipfs } from '../../ipfs/services/ipfs';
+import { ActivatedRoute } from '@angular/router';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { Observable } from 'rxjs/Observable';
+import { Buffer } from 'buffer';
+import { debug } from 'util';
 
 @Component({
   selector: 'app-root',
@@ -12,6 +13,7 @@ import {Buffer} from 'buffer';
 })
 export class MainComponent implements OnInit {
   title = 'app';
+  topic: 'hello';
   addresses: Observable<Array<string>>;
   peers: Array<string>;
   messages: Array<string>;
@@ -33,43 +35,42 @@ export class MainComponent implements OnInit {
 
   initMediaRecorder() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      console.log('getUserMedia supported.');
       navigator.mediaDevices.getUserMedia(
         {
-          audio: true
+          audio: true,
+          video: true
         })
         .then((stream) => {
           this.mediaRecorder = new (<any>window).MediaRecorder(stream);
           this.mediaRecorder.onstop = this.onStop.bind(this);
-          this.mediaRecorder.ondataavailable = this.onAudioData.bind(this);
+          this.mediaRecorder.ondataavailable = this.onData.bind(this);
         });
     }
   }
 
-  recordAudio() {
+  startRecording() {
     this.chunks = [];
     this.mediaRecorder.start();
   }
 
-  onAudioData(e) {
+  onData(e) {
     this.chunks.push(e.data);
     const fileReader = new FileReader();
     fileReader.onload = event => {
       const arr = (<FileReader>event.target).result;
       const buffer = Buffer.from(arr);
       this.ipfs.node.files.add(buffer, (err, res) => {
-        this.ipfs.pub('hello', res[0].hash);
+        this.ipfs.pub(this.topic, res[0].hash);
         this.myMessages.push(res[0].hash);
       });
     };
     fileReader.readAsArrayBuffer(e.data);
-
   }
 
   onStop() {
-    const audioURL = window.URL.createObjectURL(this.chunks[0]);
-    const audio: HTMLAudioElement = <HTMLAudioElement>document.getElementById('a');
-    audio.src = audioURL;
+    const url = window.URL.createObjectURL(this.chunks[0]);
+    const element: HTMLVideoElement = <HTMLVideoElement>document.getElementById('media');
+    element.src = url;
   }
 
   stopRecording() {
@@ -82,16 +83,18 @@ export class MainComponent implements OnInit {
 
   ngOnInit() {
     this.ipfs.ready().subscribe(() => {
-      this.ipfs.sub('hello').subscribe(data => {
+      this.ipfs.sub(this.topic).subscribe(data => {
         const contentHash = data.toString();
         this.messages.push(contentHash);
         if (this.myMessages.includes(contentHash)) {
           this.ipfs.get(contentHash).subscribe((files) => {
-            const blob = new Blob([files[0].content], { 'type': 'audio/ogg; codecs=opus' });
-            const audioURL = window.URL.createObjectURL(blob);
-            const audio: HTMLAudioElement = <HTMLAudioElement>document.getElementById('a');
-            audio.src = audioURL;
-            audio.play();
+            const blob = new Blob([files[0].content], { 'type': 'video/x-matroska;codecs=avc1,opus' });
+            const url = window.URL.createObjectURL(blob);
+            const element: HTMLVideoElement = <HTMLVideoElement>document.getElementById('media');
+            element.src = url;
+            element.oncanplaythrough.bind(e => {
+              element.play();
+            });
           });
         }
       });
@@ -103,6 +106,6 @@ export class MainComponent implements OnInit {
   }
 
   publish(message) {
-    this.ipfs.pub('hello', message);
+    this.ipfs.pub(this.topic, message);
   }
 }
