@@ -52,15 +52,23 @@ export class MainComponent implements OnInit {
 
   onAudioData(e) {
     this.chunks.push(e.data);
+    console.log('ondata-pre', e);
+    const fileReader = new FileReader();
+    fileReader.onload = event => {
+      const arr = (<FileReader>event.target).result;
+      console.log('ondata-mid', arr);
+      const buffer = Buffer.from(arr);
+      this.ipfs.node.files.add(buffer, (err, res) => {
+        console.log('ondata-ok', res);
+        this.ipfs.pub('hello', res[0].hash);
+      });
+    };
+    fileReader.readAsArrayBuffer(e.data);
+
   }
 
   onStop() {
-    const blob = new Blob(this.chunks, {'type': 'audio/ogg; codecs=opus'});
-    this.chunks = [];
-    const audioURL = window.URL.createObjectURL(blob);
-    this.ipfs.node.files.add(blob, (err, res) => {
-      this.ipfs.pub('hello', res[0].hash);
-    });
+    const audioURL = window.URL.createObjectURL(this.chunks[0]);
     const audio: HTMLAudioElement = <HTMLAudioElement>document.getElementById('a');
     audio.src = audioURL;
   }
@@ -78,26 +86,18 @@ export class MainComponent implements OnInit {
       this.ipfs.sub('hello').subscribe(data => {
         this.messages.push(data.toString());
         this.ipfs.get(data.toString()).subscribe((files) => {
-          console.log(files);
+          console.log('getfiles', files);
           const blob = new Blob([files[0].content], { 'type': 'audio/ogg; codecs=opus' });
           const audioURL = window.URL.createObjectURL(blob);
           const audio: HTMLAudioElement = <HTMLAudioElement>document.getElementById('a');
           audio.src = audioURL;
+          audio.play();
         });
       });
       this.ipfs.peers().subscribe(peer => {
         this.peers.push(peer.id._idB58String);
       });
       this.addresses = this.ipfs.addresses();
-
-      function blobToDataURL(blob) {
-        return new Promise((fulfill, reject) => {
-          const reader = new FileReader();
-          reader.onerror = reject;
-          reader.onload = (e) => fulfill(reader.result);
-          reader.readAsDataURL(blob);
-        });
-      }
     });
   }
 
