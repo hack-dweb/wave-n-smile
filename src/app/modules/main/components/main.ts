@@ -3,7 +3,7 @@ import {Ipfs} from '../../ipfs/services/ipfs';
 import {ActivatedRoute} from '@angular/router';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {Observable} from 'rxjs/Observable';
-import { debug } from 'util';
+import {Buffer} from 'buffer';
 
 @Component({
   selector: 'app-root',
