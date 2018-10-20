@@ -4,6 +4,7 @@ import {ActivatedRoute} from '@angular/router';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {Observable} from 'rxjs/Observable';
 import { debug } from 'util';
+import { Buffer } from 'buffer';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +16,7 @@ export class MainComponent implements OnInit {
   addresses: Observable<Array<string>>;
   peers: Array<string>;
   messages: Array<string>;
+  myMessages: Array<string>;
   ipfs;
   displayPeerList = false;
   mediaRecorder;
@@ -25,6 +27,7 @@ export class MainComponent implements OnInit {
   constructor(ipfs: Ipfs, private route: ActivatedRoute, private sanitizer: DomSanitizer) {
     this.messages = [];
     this.peers = [];
+    this.myMessages = [];
     this.ipfs = ipfs;
     this.initMediaRecorder();
   }
@@ -33,7 +36,6 @@ export class MainComponent implements OnInit {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       console.log('getUserMedia supported.');
       navigator.mediaDevices.getUserMedia(
-        // constraints - only audio needed for this app
         {
           audio: true
         })
@@ -52,15 +54,13 @@ export class MainComponent implements OnInit {
 
   onAudioData(e) {
     this.chunks.push(e.data);
-    console.log('ondata-pre', e);
     const fileReader = new FileReader();
     fileReader.onload = event => {
       const arr = (<FileReader>event.target).result;
-      console.log('ondata-mid', arr);
       const buffer = Buffer.from(arr);
       this.ipfs.node.files.add(buffer, (err, res) => {
-        console.log('ondata-ok', res);
         this.ipfs.pub('hello', res[0].hash);
+        this.myMessages.push(res[0].hash);
       });
     };
     fileReader.readAsArrayBuffer(e.data);
@@ -84,15 +84,17 @@ export class MainComponent implements OnInit {
   ngOnInit() {
     this.ipfs.ready().subscribe(() => {
       this.ipfs.sub('hello').subscribe(data => {
-        this.messages.push(data.toString());
-        this.ipfs.get(data.toString()).subscribe((files) => {
-          console.log('getfiles', files);
-          const blob = new Blob([files[0].content], { 'type': 'audio/ogg; codecs=opus' });
-          const audioURL = window.URL.createObjectURL(blob);
-          const audio: HTMLAudioElement = <HTMLAudioElement>document.getElementById('a');
-          audio.src = audioURL;
-          audio.play();
-        });
+        const contentHash = data.toString();
+        this.messages.push(contentHash);
+        if (this.myMessages.includes(contentHash)) {
+          this.ipfs.get(contentHash).subscribe((files) => {
+            const blob = new Blob([files[0].content], { 'type': 'audio/ogg; codecs=opus' });
+            const audioURL = window.URL.createObjectURL(blob);
+            const audio: HTMLAudioElement = <HTMLAudioElement>document.getElementById('a');
+            audio.src = audioURL;
+            audio.play();
+          });
+        }
       });
       this.ipfs.peers().subscribe(peer => {
         this.peers.push(peer.id._idB58String);
