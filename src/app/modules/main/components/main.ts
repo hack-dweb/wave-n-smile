@@ -92,9 +92,9 @@ export class MainComponent implements OnInit {
             const url = window.URL.createObjectURL(blob);
             const element: HTMLVideoElement = <HTMLVideoElement>document.getElementById('media');
             element.src = url;
-            element.oncanplaythrough.bind(e => {
+            element.oncanplaythrough = () => {
               element.play();
-            });
+            };
           });
         }
       });
