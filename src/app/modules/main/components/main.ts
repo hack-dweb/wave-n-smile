@@ -1,15 +1,14 @@
-import {Component, ElementRef, OnInit} from '@angular/core';
+import {Component, ElementRef, OnInit, ViewEncapsulation} from '@angular/core';
 import {Ipfs} from '../../ipfs/services/ipfs';
-import {ActivatedRoute} from '@angular/router';
-import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import {SafeUrl} from '@angular/platform-browser';
 import {Observable} from 'rxjs/Observable';
 import {Buffer} from 'buffer';
-import {debug} from 'util';
 
 @Component({
   selector: 'app-root',
   templateUrl: './main.html',
-  styleUrls: ['./main.scss']
+  styleUrls: ['./main.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class MainComponent implements OnInit {
   title = 'app';
@@ -40,7 +39,7 @@ export class MainComponent implements OnInit {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia(
           {
-            audio: true,
+            audio: false,
             video: {
               width: 100,
               frameRate: 10
@@ -95,7 +94,7 @@ export class MainComponent implements OnInit {
     fileReader.onload = event => {
       const arr = (<FileReader>event.target).result;
       const buffer = Buffer.from(arr);
-      console.log('PUBLISH!!')
+      console.log('PUBLISH!!');
       this.ipfs.pub(this.topic, buffer);
     };
     fileReader.readAsArrayBuffer(e.data);
@@ -110,9 +109,10 @@ export class MainComponent implements OnInit {
     this.ipfs.connectPeer(peer);
   }
 
-  addVideo(data, videoEl) {
+  addVideo(data) {
     const blob = new Blob([data], {'type': 'video/x-matroska;codecs=avc1,opus'});
     const url = window.URL.createObjectURL(blob);
+    const videoEl: HTMLVideoElement = document.createElement('video');
     if (videoEl.paused || videoEl.ended) {
       videoEl.src = url;
       videoEl.play().then(
@@ -122,14 +122,15 @@ export class MainComponent implements OnInit {
       );
       videoEl.loop = true;
     }
+    this.el.nativeElement.querySelector('.video-container').appendChild(videoEl);
   }
 
   ngOnInit() {
     this.ipfs.ready().subscribe(() => {
       this.ipfs.sub(this.topic).subscribe(data => {
-        const element: HTMLVideoElement = document.createElement('video');
-        this.el.nativeElement.querySelector('.video-container').appendChild(element);
-        this.addVideo(data, element);
+        setTimeout(() => {
+          this.addVideo(data);
+        });
       });
 
       this.ipfs.peers().subscribe(peer => {

@@ -37,7 +37,7 @@
 
 <div class="dalkie-walkie">
   <div class="button record-btn" (click)="toggleRecording()">
-    <i class="fa fa-microphone" *ngIf="!isRecording"></i>
+    <i class="fa fa-video-camera" *ngIf="!isRecording"></i>
     <video [hidden]="!isRecording"
            id="self"
            autoplay></video>
@@ -53,6 +53,7 @@
         <div class='fill'></div>
       </div>
     </div>
+    <h1>Wave 'n Smile</h1>
   </div>
 
   <div class="video-container">

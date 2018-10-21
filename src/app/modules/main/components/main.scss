@@ -37,6 +37,27 @@
       font-size: 40px;
     }
   }
+
+  h1{
+    position: absolute;
+    width: 200px;
+    background: white;
+    padding: 20px;
+    border-radius: 3px;
+    left: 20px;
+    top: -170px;
+    box-shadow: 0 0 10px 0 rgba(0,0,0,0.6);
+
+    &:after{
+      content: '';
+      position: absolute;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-top: 20px solid #fff;
+      bottom: -20px;
+      left: 35px;
+    }
+  }
 }
 
 .video-container {
@@ -65,8 +86,9 @@
 .footer{
   position: fixed;
   bottom: 0px;
-  height: 20px;
+  height: 30px;
   width: 100vw;
-  color: white;
-  padding: 10px;
+  color: #ccc;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
