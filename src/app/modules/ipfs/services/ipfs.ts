@@ -12,14 +12,39 @@ export class Ipfs {
       EXPERIMENTAL: {
         pubsub: true
       },
+      relay: {
+        enabled: true, // enable relay dialer/listener (STOP)
+        hop: {
+          enabled: true // make this node a relay (HOP)
+        }
+      },
+      preload: {
+        enabled: true,
+        addresses: [
+          '/ip4/51.15.99.113/tcp/4001/ipfs/QmbfSzbrPZEGsNea7Dqkk4kEgAiLDEwhgYw1ababTYD1zS'
+        ]
+      },
       config: {
         Addresses: {
           Swarm: [
             '/ip4/51.15.99.113/tcp/4001/ipfs/QmbfSzbrPZEGsNea7Dqkk4kEgAiLDEwhgYw1ababTYD1zS',
             '/dns4/ws-star.discovery.libp2p.io/tcp/443/wss/p2p-websocket-star'
           ]
-        }
-      }
+        },
+        Discovery: {
+          MDNS: {
+            Enabled: false,
+            Interval: 10
+          },
+          webRTCStar: {
+            Enabled: true
+          }
+        },
+        Bootstrap: [
+          '/ip4/51.15.99.113/tcp/4001/ipfs/QmbfSzbrPZEGsNea7Dqkk4kEgAiLDEwhgYw1ababTYD1zS',
+        ]
+      },
+
     });
   }
 

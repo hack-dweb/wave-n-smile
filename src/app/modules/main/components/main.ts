@@ -13,22 +13,17 @@ import { debug } from 'util';
 })
 export class MainComponent implements OnInit {
   title = 'app';
-  topic: 'hello';
+  topic = 'hello';
   addresses: Observable<Array<string>>;
   peers: Array<string>;
-  messages: Array<string>;
-  myMessages: Array<string>;
   ipfs;
   displayPeerList = false;
   mediaRecorder;
-  chunks: Array<any>;
 
   image: SafeUrl;
 
   constructor(ipfs: Ipfs, private route: ActivatedRoute, private sanitizer: DomSanitizer) {
-    this.messages = [];
     this.peers = [];
-    this.myMessages = [];
     this.ipfs = ipfs;
     this.initMediaRecorder();
   }
@@ -38,39 +33,30 @@ export class MainComponent implements OnInit {
       navigator.mediaDevices.getUserMedia(
         {
           audio: true,
-          video: true
+          video: {
+            width: 100,
+            frameRate: 10
+          }
         })
         .then((stream) => {
           this.mediaRecorder = new (<any>window).MediaRecorder(stream);
-          this.mediaRecorder.onstop = this.onStop.bind(this);
           this.mediaRecorder.ondataavailable = this.onData.bind(this);
         });
     }
   }
 
   startRecording() {
-    this.chunks = [];
-    this.mediaRecorder.start();
+    this.mediaRecorder.start(10000);
   }
 
   onData(e) {
-    this.chunks.push(e.data);
     const fileReader = new FileReader();
     fileReader.onload = event => {
       const arr = (<FileReader>event.target).result;
       const buffer = Buffer.from(arr);
-      this.ipfs.node.files.add(buffer, (err, res) => {
-        this.ipfs.pub(this.topic, res[0].hash);
-        this.myMessages.push(res[0].hash);
-      });
+      this.ipfs.pub(this.topic, buffer);
     };
     fileReader.readAsArrayBuffer(e.data);
-  }
-
-  onStop() {
-    const url = window.URL.createObjectURL(this.chunks[0]);
-    const element: HTMLVideoElement = <HTMLVideoElement>document.getElementById('media');
-    element.src = url;
   }
 
   stopRecording() {
@@ -84,23 +70,25 @@ export class MainComponent implements OnInit {
   ngOnInit() {
     this.ipfs.ready().subscribe(() => {
       this.ipfs.sub(this.topic).subscribe(data => {
-        const contentHash = data.toString();
-        this.messages.push(contentHash);
-        if (this.myMessages.includes(contentHash)) {
-          this.ipfs.get(contentHash).subscribe((files) => {
-            const blob = new Blob([files[0].content], { 'type': 'video/x-matroska;codecs=avc1,opus' });
-            const url = window.URL.createObjectURL(blob);
-            const element: HTMLVideoElement = <HTMLVideoElement>document.getElementById('media');
-            element.src = url;
-            element.oncanplaythrough = () => {
-              element.play();
-            };
-          });
+        const blob = new Blob([data], { 'type': 'video/x-matroska;codecs=avc1,opus' });
+        const url = window.URL.createObjectURL(blob);
+        const element: HTMLVideoElement = <HTMLVideoElement>document.getElementById('media');
+        if (element.paused || element.ended) {
+          console.log('beep');
+          element.src = url;
+          element.play().then(
+            () => {},
+            (reason) => console.log('cannot', url, reason)
+          );
+        } else {
+          console.log('boop');
         }
       });
+
       this.ipfs.peers().subscribe(peer => {
         this.peers.push(peer.id._idB58String);
       });
+
       this.addresses = this.ipfs.addresses();
     });
   }
