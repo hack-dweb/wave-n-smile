@@ -127,7 +127,6 @@ export class MainComponent implements OnInit {
   ngOnInit() {
     this.ipfs.ready().subscribe(() => {
       this.ipfs.sub(this.topic).subscribe(data => {
-        console.log('NEW DATE');
         const element: HTMLVideoElement = document.createElement('video');
         this.el.nativeElement.querySelector('.video-container').appendChild(element);
         this.addVideo(data, element);
