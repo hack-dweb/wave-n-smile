@@ -1,0 +1,84 @@
+#loading {
+  width: 150px;
+  height: 150px;
+  position: absolute;
+
+  &.animated{
+    .left .fill {
+      animation: left 2.5s linear both;
+    }
+    .right .fill{
+      animation: right 2.5s linear both;
+      animation-delay: 2.5s;
+    }
+  }
+
+  .outer-shadow,
+  .inner-shadow {
+    z-index: 4;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+    box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.5);
+  }
+  .inner-shadow {
+    top: 50%;
+    left: 50%;
+    width: 140px;
+    height: 140px;
+    margin-left: -70px;
+    margin-top: -70px;
+    border-radius: 100%;
+    background-color: red;
+    box-shadow: 1px 1px 1px 1px rgba(0, 0, 0, 0.5);
+  }
+  .hold {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    clip: rect(0px, 150px, 150px, 75px);
+    border-radius: 100%;
+    background-color: #fff;
+  }
+  .fill,
+  .dot span {
+    background-color: #f50;
+  }
+  .fill {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+    clip: rect(0px, 75px, 150px, 0px);
+  }
+  .left .fill {
+    z-index: 1;
+    //animation: left 3s linear both;
+  }
+  .right {
+    z-index: 3;
+    transform: rotate(180deg);
+  }
+  .right .fill {
+    z-index: 3;
+    //animation: right 3s linear both;
+    //animation-delay: 3s;
+  }
+}
+@keyframes left {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(180deg);
+  }
+}
+@keyframes right {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(180deg);
+  }
+}

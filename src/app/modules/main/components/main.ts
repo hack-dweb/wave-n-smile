@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
-import { Ipfs } from '../../ipfs/services/ipfs';
-import { ActivatedRoute } from '@angular/router';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
-import { Observable } from 'rxjs/Observable';
-import { Buffer } from 'buffer';
-import { debug } from 'util';
+import {Component, ElementRef, OnInit} from '@angular/core';
+import {Ipfs} from '../../ipfs/services/ipfs';
+import {ActivatedRoute} from '@angular/router';
+import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
+import {Observable} from 'rxjs/Observable';
+import {Buffer} from 'buffer';
+import {debug} from 'util';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +13,7 @@ import { debug } from 'util';
 })
 export class MainComponent implements OnInit {
   title = 'app';
-  topic: 'hello';
+  topic = 'hello';
   addresses: Observable<Array<string>>;
   peers: Array<string>;
   messages: Array<string>;
@@ -21,59 +21,88 @@ export class MainComponent implements OnInit {
   ipfs;
   displayPeerList = false;
   mediaRecorder;
-  chunks: Array<any>;
+  isRecording = false;
+  currentTime = null;
+  maxRecordTime = 5000;
+  autoStopTimeout;
 
   image: SafeUrl;
 
-  constructor(ipfs: Ipfs, private route: ActivatedRoute, private sanitizer: DomSanitizer) {
+  constructor(ipfs: Ipfs, private el: ElementRef) {
     this.messages = [];
     this.peers = [];
     this.myMessages = [];
     this.ipfs = ipfs;
-    this.initMediaRecorder();
   }
 
   initMediaRecorder() {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia(
-        {
-          audio: true,
-          video: true
-        })
-        .then((stream) => {
-          this.mediaRecorder = new (<any>window).MediaRecorder(stream);
-          this.mediaRecorder.onstop = this.onStop.bind(this);
-          this.mediaRecorder.ondataavailable = this.onData.bind(this);
-        });
+    return new Promise((resolve, reject) => {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia(
+          {
+            audio: true,
+            video: {
+              width: 100,
+              frameRate: 10
+            }
+          })
+          .then((stream) => {
+            this.mediaRecorder = new (<any>window).MediaRecorder(stream);
+            this.mediaRecorder.ondataavailable = this.onData.bind(this);
+            (<HTMLVideoElement>document.getElementById('self')).srcObject = stream;
+            resolve(this.mediaRecorder);
+          });
+      } else {
+        reject('Not Supported');
+      }
+    });
+  }
+
+  toggleRecording() {
+    if (this.isRecording) {
+      this.stopRecording();
+    } else {
+      this.startRecording();
+    }
+  }
+
+  autoStop() {
+    if (this.currentTime === null) {
+      this.currentTime = this.maxRecordTime;
+    }
+    if (this.currentTime > 0) {
+      clearTimeout(this.autoStopTimeout);
+      this.currentTime -= 1000;
+      console.log(this.currentTime);
+      this.autoStopTimeout = setTimeout(this.autoStop.bind(this), 1000);
+    } else {
+      clearTimeout(this.autoStopTimeout);
+      this.currentTime = null;
+      this.stopRecording();
     }
   }
 
   startRecording() {
-    this.chunks = [];
-    this.mediaRecorder.start();
+    this.initMediaRecorder().then(() => {
+      this.isRecording = true;
+      this.mediaRecorder.start(10000);
+      this.autoStop();
+    });
   }
 
   onData(e) {
-    this.chunks.push(e.data);
     const fileReader = new FileReader();
     fileReader.onload = event => {
       const arr = (<FileReader>event.target).result;
       const buffer = Buffer.from(arr);
-      this.ipfs.node.files.add(buffer, (err, res) => {
-        this.ipfs.pub(this.topic, res[0].hash);
-        this.myMessages.push(res[0].hash);
-      });
+      console.log('PUBLISH!!')
+      this.ipfs.pub(this.topic, buffer);
     };
     fileReader.readAsArrayBuffer(e.data);
   }
 
-  onStop() {
-    const url = window.URL.createObjectURL(this.chunks[0]);
-    const element: HTMLVideoElement = <HTMLVideoElement>document.getElementById('media');
-    element.src = url;
-  }
-
   stopRecording() {
+    this.isRecording = false;
     this.mediaRecorder.stop();
   }
 
@@ -81,26 +110,33 @@ export class MainComponent implements OnInit {
     this.ipfs.connectPeer(peer);
   }
 
+  addVideo(data, videoEl) {
+    const blob = new Blob([data], {'type': 'video/x-matroska;codecs=avc1,opus'});
+    const url = window.URL.createObjectURL(blob);
+    if (videoEl.paused || videoEl.ended) {
+      videoEl.src = url;
+      videoEl.play().then(
+        () => {
+        },
+        (reason) => console.log('cannot', url, reason)
+      );
+      videoEl.loop = true;
+    }
+  }
+
   ngOnInit() {
     this.ipfs.ready().subscribe(() => {
       this.ipfs.sub(this.topic).subscribe(data => {
-        const contentHash = data.toString();
-        this.messages.push(contentHash);
-        if (this.myMessages.includes(contentHash)) {
-          this.ipfs.get(contentHash).subscribe((files) => {
-            const blob = new Blob([files[0].content], { 'type': 'video/x-matroska;codecs=avc1,opus' });
-            const url = window.URL.createObjectURL(blob);
-            const element: HTMLVideoElement = <HTMLVideoElement>document.getElementById('media');
-            element.src = url;
-            element.oncanplaythrough.bind(e => {
-              element.play();
-            });
-          });
-        }
+        console.log('NEW DATE');
+        const element: HTMLVideoElement = document.createElement('video');
+        this.el.nativeElement.querySelector('.video-container').appendChild(element);
+        this.addVideo(data, element);
       });
+
       this.ipfs.peers().subscribe(peer => {
         this.peers.push(peer.id._idB58String);
       });
+
       this.addresses = this.ipfs.addresses();
     });
   }

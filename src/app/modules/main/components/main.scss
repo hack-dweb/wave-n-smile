@@ -1,0 +1,72 @@
+@import "circle";
+
+.dalkie-walkie {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #463f4e;
+
+  .record-btn {
+    background: red;
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99;
+
+    &:after {
+      content: '';
+      position: absolute;
+      border: 30px solid rgba(255, 0, 0, 0.5);
+      height: 100%;
+      width: 100%;
+      top: -20%;
+      left: -20%;
+      border-radius: 50%;
+    }
+
+    i {
+      color: white;
+      z-index: 9999999;
+      position: relative;
+      font-size: 40px;
+    }
+  }
+}
+
+.video-container {
+  width: 95vw;
+  height: 95vh;
+  position: absolute;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-rows: repeat(7, 150px);
+  grid-column-gap: 10px;
+  grid-row-gap: 10px;
+  list-style: none;
+  flex-wrap: wrap;
+  padding: 0;
+  margin: 0;
+}
+
+#self {
+  width: 140px;
+  height: 140px;
+  background: red;
+  clip-path: circle(71px at 71px 71px);
+  z-index: 9;
+}
+
+.footer{
+  position: fixed;
+  bottom: 0px;
+  height: 20px;
+  width: 100vw;
+  color: white;
+  padding: 10px;
+}

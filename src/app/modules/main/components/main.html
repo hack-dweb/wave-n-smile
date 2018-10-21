@@ -1,31 +1,65 @@
-My identifiers:
-<ul>
+<div class="debug" hidden>
+  My identifiers:
+  <ul>
     <li *ngFor="let a of addresses | async">{{a}}</li>
-</ul>
+  </ul>
 
-<hr/>
-Connect to peer:
-<input type="text" #peer>
-<button type="submit" (click)='addPeer(peer.value)'>Add</button>
+  <hr/>
+  Connect to peer:
+  <input type="text" #peer>
+  <button type="submit" (click)='addPeer(peer.value)'>Add</button>
 
-<hr/>
-<a (click)="displayPeerList=!displayPeerList">Peers ({{ (peers)?.length}})</a>:
-<ul [hidden]="!displayPeerList" style="max-height: 200px; overflow-y:scroll;">
+  <hr/>
+  <a (click)="displayPeerList=!displayPeerList">Peers ({{ (peers)?.length}})</a>:
+  <ul [hidden]="!displayPeerList" style="max-height: 200px; overflow-y:scroll;">
     <li *ngFor="let p of peers">{{p}}</li>
-</ul>
+  </ul>
 
-<hr/>
-Publish something
-<textarea type="text" #message></textarea>
-<button type="submit" (click)='publish(message.value)'>Publish</button>
+  <hr/>
+  Publish something
+  <textarea type="text" #message></textarea>
+  <button type="submit" (click)='publish(message.value)'>Publish</button>
 
-<hr/>
-Messages:
-<ul style="max-height: 200px; overflow-y:scroll;">
+  <hr/>
+  Messages:
+  <ul style="max-height: 200px; overflow-y:scroll;">
     <li *ngFor="let m of messages">{{m}}</li>
-</ul>
+  </ul>
 
-<button (click)="startRecording()">Record</button>
-<button (click)="stopRecording()">Stop</button>
+  <button (click)="startRecording()">Record</button>
+  <button (click)="stopRecording()">Stop</button>
 
-<video id="media" autoplay></video>
+
+  <video id="media" autoplay></video>
+  <audio id="audio" controls></audio>
+
+</div>
+
+<div class="dalkie-walkie">
+  <div class="button record-btn" (click)="toggleRecording()">
+    <i class="fa fa-microphone" *ngIf="!isRecording"></i>
+    <video [hidden]="!isRecording"
+           id="self"
+           autoplay></video>
+    <div id='loading' [ngClass]="{animated: isRecording}">
+      <div class='outer-shadow'>
+      </div>
+      <div class='inner-shadow'>
+      </div>
+      <div class='hold left'>
+        <div class='fill'></div>
+      </div>
+      <div class='hold right'>
+        <div class='fill'></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="video-container">
+  </div>
+
+  <!-- Canvas Holder for the animation -->
+  <canvas id="anim" style="position: absolute;z-index: 0;"></canvas>
+
+  <div class="footer">{{ (peers)?.length}} total connected peers</div>
+</div>
