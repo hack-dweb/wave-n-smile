@@ -7,7 +7,7 @@ Wave 'n Smile is a hackathon project developed at [HackUPC](https://hackupc.com/
 Everyone can join the network and becomes part of it. 
 Data is distributed over each peer instead of a central server that can collect and trade your data
 
-- [Demo](https://ipfs.io/ipfs/QmduC5oyFU4GKoyxxzKqpKXczv7RjsegYDdEqTb5uMgyPf)
+- [Demo](https://ipfs.io/ipfs/QmVVBmu58AZgBmoZHHKTyYaSHh6xskLjR8y2vohjCyNe9e)
 - [Devpost](https://devpost.com/software/wave-n-smile)
 
 ## Technology
