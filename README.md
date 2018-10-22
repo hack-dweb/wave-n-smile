@@ -1,7 +1,18 @@
-# IpfsAngular
+# Wave 'n Smile
 
-An IPFS Service for Angular, take a look at the main.ts to see how it works.
+[![Wave and Smile Teaser](./preview.gif)](https://cloud-player.io)
 
-For now it doesn't support operations on files, just pubsub and basic peers managment.
+Wave 'n Smile is a hackathon project developed at [HackUPC](https://hackupc.com/) and uses
+[IPFS](http://ipfs.io) to stream 5 second video snippets. 
+Everyone can join the network and becomes part of it. 
+Data is distributed over each peer instead of a central server that can collect and trade your data
 
-Demo here: https://ipfs.castignoli.it/
+- [Demo](https://ipfs.io/ipfs/QmduC5oyFU4GKoyxxzKqpKXczv7RjsegYDdEqTb5uMgyPf)
+- [Devpost](https://devpost.com/software/wave-n-smile)
+
+## Technology
+The video is transmitted to all connected peers over IPFS.
+Over a pubsub system new files are propagated automatically to all nodes that are registered on it.
+
+
+
